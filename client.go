@@ -58,6 +58,7 @@ func (c *Client) RefreshContext() error {
 func (c *Client) Metrics(query *MetricMetadataQuery) ([]Metric, error) {
 	c.logger.Debugln("Fetching metrics for context...")
 	result := make(map[string][]Metric)
+	var metrics []Metric
 
 	body, err := c.getQuery(query)
 	if err != nil {
@@ -67,8 +68,13 @@ func (c *Client) Metrics(query *MetricMetadataQuery) ([]Metric, error) {
 	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, err
 	}
+	metrics = result["metrics"]
+	name := func(m1, m2 *Metric) bool {
+		return m1.Name < m2.Name
+	}
+	By(name).Sort(metrics)
 
-	return result["metrics"], nil
+	return metrics, nil
 }
 
 func (c *Client) MetricValues(query *MetricValueQuery) (*MetricValueResponse, error) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/jameskyle/pcp"
@@ -51,7 +52,14 @@ func main() {
 		logger.Errorf("Received error retrieving metrics: %s", err)
 		os.Exit(1)
 	}
-
+	types := make(map[string]bool)
+	for _, metric := range metrics {
+		types[metric.Type] = true
+		logger.Infof("%s\n", metric.Name)
+	}
+	for key := range types {
+		fmt.Println(key)
+	}
 	logger.Infof("Retrieved %d unique metrics from context", len(metrics))
 
 	// Get values for first 5 metrics by name
@@ -61,10 +69,9 @@ func main() {
 	}
 
 	metric_values_query := pcp.NewMetricValueQuery(names, []string{})
-	resp, err := client.MetricValues(metric_values_query)
+	_, err = client.MetricValues(metric_values_query)
 	if err != nil {
 		logger.Errorf("Received error retrieving metric values: %s", err)
 	}
 
-	logger.Debugln(resp)
 }
