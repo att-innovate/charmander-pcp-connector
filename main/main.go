@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"os"
-	"strings"
 
 	"github.com/jameskyle/pcp"
 )
@@ -34,32 +33,38 @@ func main() {
 	logger.Infoln("Starting...")
 
 	context := pcp.NewContext(hostname)
-	client := pcp.NewClient(endpoint)
+	client := pcp.NewClient(endpoint, context)
 	client.SetLogLevel(pcp.LOG_DEBUG)
+	// var query pcp.Query
 
-	err := client.RefreshContext(context)
-	logger.Debugln(context)
+	err := client.RefreshContext()
+	logger.Debugln(client.Context)
+
 	if err != nil {
 		logger.Errorf("Received error refreshing context: %s", err)
 		os.Exit(1)
 	}
 
-	metrics, err := client.Metrics(context, "")
+	metrics, err := client.Metrics(pcp.NewMetricMetadataQuery(""))
 
 	if err != nil {
 		logger.Errorf("Received error retrieving metrics: %s", err)
 		os.Exit(1)
 	}
-	logger.Infof("Retrieved %d unique metrics from contenxt", len(metrics))
 
-	wanted := strings.Join(func() []string {
-		names := []string{}
-		for _, metric := range metrics[:5] {
-			names = append(names, metric.Name)
-		}
-		return names
-	}(), ",")
+	logger.Infof("Retrieved %d unique metrics from context", len(metrics))
 
-	logger.Infoln(wanted)
+	// Get values for first 5 metrics by name
+	var names []string
+	for _, metric := range metrics[:50] {
+		names = append(names, metric.Name)
+	}
 
+	metric_values_query := pcp.NewMetricValueQuery(names, []string{})
+	resp, err := client.MetricValues(metric_values_query)
+	if err != nil {
+		logger.Errorf("Received error retrieving metric values: %s", err)
+	}
+
+	logger.Debugln(resp)
 }

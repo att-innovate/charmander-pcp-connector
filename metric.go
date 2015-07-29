@@ -10,3 +10,14 @@ type Metric struct {
 	TextOneline string `json:"text-oneline"`
 	TextHelp    string `json:"text-help"`
 }
+
+type Instance struct {
+	Instance int32       `json:"instance"`
+	Value    interface{} `json:"value"`
+}
+
+type MetricValue struct {
+	Name      string `json:"name"`
+	Pmid      uint32 `json:"pmid"`
+	Instances []Instance
+}

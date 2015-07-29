@@ -24,6 +24,13 @@ func NewContext(hostname string) *Context {
 	return c
 }
 
+// Conforms to the Query interface
+
+func (c *Context) Query() (string, error) {
+	query := "context"
+	return query + "?" + c.params(), nil
+}
+
 func (c *Context) setIfNotEmpty(v *url.Values, key string, value string) {
 	if value != "" {
 		v.Set(key, value)
