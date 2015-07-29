@@ -1,9 +1,11 @@
 package pcp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 type Client struct {
@@ -34,18 +36,62 @@ func (c *Client) RefreshContext(context *Context) error {
 		context.params(),
 	)
 	c.logger.Debugf("Generated refresh url: %s", url)
-	resp, err := http.Get(url)
 
+	body, err := c.get(url)
 	if err != nil {
 		return err
 	}
+
+	if err := json.Unmarshal(body, context); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) Metrics(context *Context, prefix string) ([]Metric, error) {
+	c.logger.Debugln("Fetching metrics for context...")
+	result := make(map[string][]Metric)
+
+	u := fmt.Sprintf(
+		"%s%s/%d/%s",
+		c.Endpoint,
+		c.path,
+		context.ContextID,
+		"_metric",
+	)
+	if prefix != "" {
+		v := url.Values{}
+		v.Set("prefix", prefix)
+		u += "?" + v.Encode()
+	}
+	c.logger.Debugf("Generated metrics url: %s", u)
+
+	body, err := c.get(u)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, err
+	}
+
+	return result["metrics"], nil
+}
+
+func (c *Client) get(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+
+	if err != nil {
+		return nil, err
+	}
+
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	c.logger.Debugln(string(body))
-	return nil
+	return body, nil
 }

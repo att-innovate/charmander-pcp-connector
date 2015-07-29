@@ -13,7 +13,7 @@ type Context struct {
 	Password    string
 	Archivefile string
 	PollTimeout int32
-	ContextID   uint32
+	ContextID   uint32 `json:"context"`
 }
 
 func NewContext(hostname string) *Context {
