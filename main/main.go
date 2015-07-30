@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 
 	"github.com/jameskyle/pcp"
@@ -46,20 +45,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	metrics, err := client.Metrics(pcp.NewMetricMetadataQuery(""))
+	metrics, err := client.Metrics(pcp.NewMetricQuery(""))
 
 	if err != nil {
 		logger.Errorf("Received error retrieving metrics: %s", err)
 		os.Exit(1)
 	}
-	types := make(map[string]bool)
-	for _, metric := range metrics {
-		types[metric.Type] = true
-		logger.Infof("%s\n", metric.Name)
-	}
-	for key := range types {
-		fmt.Println(key)
-	}
+
 	logger.Infof("Retrieved %d unique metrics from context", len(metrics))
 
 	// Get values for first 5 metrics by name
@@ -69,9 +61,28 @@ func main() {
 	}
 
 	metric_values_query := pcp.NewMetricValueQuery(names, []string{})
-	_, err = client.MetricValues(metric_values_query)
-	if err != nil {
-		logger.Errorf("Received error retrieving metric values: %s", err)
+	resp, err := client.MetricValues(metric_values_query)
+
+	for _, v := range resp.Values {
+		logger.Debugln(pcp.MetricValueType(metrics, v))
 	}
 
+	if err != nil {
+		logger.Errorf("Received error retrieving metric values: %s\n", err)
+	}
+
+	// Fetch indoms
+	// First, get the indom for a metric
+	indom := metrics[0].Indom
+
+	// Then create a InstanceDomainQuery
+	q2 := pcp.NewInstanceDomainQuery(indom)
+
+	// Retrieve results
+	indoms_result, err := client.InstanceDomain(q2)
+	if err != nil {
+		logger.Errorf("Received error retrieving indoms: %s\n", err)
+	}
+
+	logger.Debugln(indoms_result)
 }

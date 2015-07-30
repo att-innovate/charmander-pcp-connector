@@ -2,38 +2,30 @@ package pcp
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 )
 
-type Query interface {
+/*
+Querier provides an interface for generating PCP Queries. It must provide the
+Query() method.
+
+Query()
+*/
+type Querier interface {
 	Query() (string, error)
 }
 
-type MetricMetadataQuery struct {
+type MetricQuery struct {
 	Prefix string
 }
 
-type MetricValueQuery struct {
-	Names []string
-	Pmids []string
+func NewMetricQuery(prefix string) *MetricQuery {
+	return &MetricQuery{Prefix: prefix}
 }
 
-type TimeStamp struct {
-	Seconds      uint64 `json:"s"`
-	MicroSeconds uint64 `json:"us"`
-}
-
-type MetricValueResponse struct {
-	Timestamp *TimeStamp
-	Values    []MetricValue
-}
-
-func NewMetricMetadataQuery(prefix string) *MetricMetadataQuery {
-	return &MetricMetadataQuery{Prefix: prefix}
-}
-
-func (m *MetricMetadataQuery) Query() (string, error) {
+func (m *MetricQuery) Query() (string, error) {
 	query := "_metric"
 	u := url.Values{}
 
@@ -42,6 +34,11 @@ func (m *MetricMetadataQuery) Query() (string, error) {
 		query += "?" + u.Encode()
 	}
 	return query, nil
+}
+
+type MetricValueQuery struct {
+	Names []string
+	Pmids []string
 }
 
 func NewMetricValueQuery(names []string, pmids []string) *MetricValueQuery {
@@ -67,4 +64,57 @@ func (m *MetricValueQuery) Query() (string, error) {
 
 	query := "_fetch" + "?" + u.Encode()
 	return query, nil
+}
+
+type InstanceDomainQuery struct {
+	InstanceDomain uint32
+	Name           string
+	Instances      []uint32
+	INames         []string
+}
+
+func NewInstanceDomainQuery(id uint32) *InstanceDomainQuery {
+	return &InstanceDomainQuery{InstanceDomain: id}
+}
+
+func (id *InstanceDomainQuery) Query() (string, error) {
+	if id.InstanceDomain == 0 && id.Name == "" {
+		e := errors.New("You must provide at least one InstanceDomain or Name for the query!")
+		return "", e
+	}
+
+	u := url.Values{}
+	instances := strings.Join(func() []string {
+		instances := []string{}
+		for _, inst := range id.Instances {
+			instances = append(instances, fmt.Sprintf("%d", inst))
+		}
+		return instances
+	}(), ",")
+	inames := strings.Join(id.INames, ",")
+
+	if inames != "" {
+		u.Set("iname", inames)
+	}
+	if instances != "" {
+		u.Set("instance", instances)
+	}
+	if id.InstanceDomain != 0 {
+		u.Set("indom", fmt.Sprintf("%d", id.InstanceDomain))
+	}
+	if id.Name != "" {
+		u.Set("name", id.Name)
+	}
+	query := "_indom" + "?" + u.Encode()
+	return query, nil
+}
+
+type TimeStamp struct {
+	Seconds      uint64 `json:"s"`
+	MicroSeconds uint64 `json:"us"`
+}
+
+type MetricValueResponse struct {
+	Timestamp *TimeStamp
+	Values    []*MetricValue
 }

@@ -55,7 +55,7 @@ func (c *Client) RefreshContext() error {
 	return nil
 }
 
-func (c *Client) Metrics(query *MetricMetadataQuery) ([]Metric, error) {
+func (c *Client) Metrics(query *MetricQuery) ([]Metric, error) {
 	c.logger.Debugln("Fetching metrics for context...")
 	result := make(map[string][]Metric)
 	var metrics []Metric
@@ -92,7 +92,22 @@ func (c *Client) MetricValues(query *MetricValueQuery) (*MetricValueResponse, er
 	return &result, nil
 }
 
-func (c *Client) getQuery(query Query) ([]byte, error) {
+func (c *Client) InstanceDomain(query *InstanceDomainQuery) (*InstanceDomain, error) {
+	c.logger.Debugln("Fetching instance domains...")
+	var indom InstanceDomain
+
+	body, err := c.getQuery(query)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(body, &indom); err != nil {
+		return nil, err
+	}
+	return &indom, nil
+}
+
+func (c *Client) getQuery(query Querier) ([]byte, error) {
 	q, err := query.Query()
 	if err != nil {
 		return nil, err
@@ -123,6 +138,6 @@ func (c *Client) get(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	c.logger.Debugf("Query Raw Result: %s", string(body))
 	return body, nil
 }

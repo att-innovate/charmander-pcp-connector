@@ -3,7 +3,7 @@ package pcp
 import "sort"
 
 /*
-The below PM_* types are taken directly from the PCP source:
+The PM_* types are taken directly from the PCP source:
 
 https://github.com/performancecopilot/pcp/blob/master/src/include/pcp/pmapi.h#L113
 
@@ -40,21 +40,36 @@ type Metric struct {
 	TextHelp    string `json:"text-help"`
 }
 
-type Instance struct {
-	Instance int32       `json:"instance"`
-	Value    interface{} `json:"value"`
+type MetricInstance struct {
+	ID    int32       `json:"instance"`
+	Value interface{} `json:"value"`
 }
 
 type MetricValue struct {
 	Name      string `json:"name"`
 	Pmid      uint32 `json:"pmid"`
-	Instances []Instance
+	Instances []MetricInstance
 }
 
-func MetricValueType(metrics []Metric, value *MetricValue) (string, error) {
-	t := PM_TYPE_UNKNOWN
+type InstanceDomainInstance struct {
+	ID   int32  `json:"instance"`
+	Name string `json:"name"`
+}
 
-	return t, nil
+type InstanceDomain struct {
+	ID        uint32                   `json:"indom"`
+	Instances []InstanceDomainInstance `json:"instances"`
+}
+
+func MetricValueType(metrics []Metric, value *MetricValue) string {
+	t := PM_TYPE_UNKNOWN
+	i := sort.Search(len(metrics), func(i int) bool {
+		return metrics[i].Name >= value.Name
+	})
+	if i != len(metrics) {
+		t = metrics[i].Type
+	}
+	return t
 }
 
 /* Sorter Methods for Metric lists
