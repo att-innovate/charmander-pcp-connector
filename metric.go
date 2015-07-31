@@ -43,6 +43,32 @@ type Metric struct {
 	TextHelp    string `json:"text-help"`
 }
 
+type MetricList []Metric
+
+func (metrics MetricList) MetricValueType(value *MetricValue) string {
+	t := PM_TYPE_UNKNOWN
+	i := sort.Search(len(metrics), func(i int) bool {
+		return metrics[i].Name >= value.Name
+	})
+	if i != len(metrics) {
+		t = metrics[i].Type
+	}
+	return t
+}
+
+func (metrics MetricList) FindMetricByName(name string) *Metric {
+	var metric *Metric
+	metric = nil
+
+	i := sort.Search(len(metrics), func(i int) bool {
+		return metrics[i].Name >= name
+	})
+	if i != len(metrics) {
+		metric = &metrics[i]
+	}
+	return metric
+}
+
 type MetricInstance struct {
 	ID    int32 `json:"instance"`
 	Name  string
@@ -78,17 +104,6 @@ type InstanceDomain struct {
 	Instances []InstanceDomainInstance `json:"instances"`
 }
 
-func MetricValueType(metrics []Metric, value *MetricValue) string {
-	t := PM_TYPE_UNKNOWN
-	i := sort.Search(len(metrics), func(i int) bool {
-		return metrics[i].Name >= value.Name
-	})
-	if i != len(metrics) {
-		t = metrics[i].Type
-	}
-	return t
-}
-
 /* Sorter Methods for Metric lists
 
 Example by metric names:
@@ -101,7 +116,7 @@ MetricBy(name).Sort(metrics)
 */
 type MetricBy func(m1, m2 *Metric) bool
 
-func (by MetricBy) Sort(metrics []Metric) {
+func (by MetricBy) Sort(metrics MetricList) {
 	ms := &metricSorter{
 		metrics: metrics,
 		by:      by,
@@ -110,7 +125,7 @@ func (by MetricBy) Sort(metrics []Metric) {
 }
 
 type metricSorter struct {
-	metrics []Metric
+	metrics MetricList
 	by      func(m1, m2 *Metric) bool
 }
 

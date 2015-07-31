@@ -69,23 +69,14 @@ func main() {
 		logger.Errorf("Received error retrieving metric values: %s\n", err)
 	}
 
-	// Fetch indoms
-	// First, get the indom for a metric
-	indom := metrics[0].Indom
-
-	// Then create a InstanceDomainQuery
-	q2 := pcp.NewInstanceDomainQuery(indom)
-
-	// Retrieve results
-	indoms_result, err := client.InstanceDomain(q2)
-	if err != nil {
-		logger.Errorf("Received error retrieving indoms: %s\n", err)
-	}
-
-	logger.Debugln(indoms_result)
-
 	// update the metric values with their metric names
 	for _, value := range resp.Values {
-		value.UpdateInstanceNames(indoms_result)
+		metric := metrics.FindMetricByName(value.Name)
+		indom, err := client.GetIndomForMetric(metric)
+		if err != nil {
+			logger.Errorf("Failed to find Instance Domain for metric: %s", err)
+		}
+		value.UpdateInstanceNames(indom)
+		logger.Debugln(value)
 	}
 }

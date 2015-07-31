@@ -55,10 +55,10 @@ func (c *Client) RefreshContext() error {
 	return nil
 }
 
-func (c *Client) Metrics(query *MetricQuery) ([]Metric, error) {
+func (c *Client) Metrics(query *MetricQuery) (MetricList, error) {
 	c.logger.Debugln("Fetching metrics for context...")
-	result := make(map[string][]Metric)
-	var metrics []Metric
+	result := make(map[string]MetricList)
+	var metrics MetricList
 
 	body, err := c.getQuery(query)
 	if err != nil {
@@ -144,4 +144,15 @@ func (c *Client) get(url string) ([]byte, error) {
 	}
 	c.logger.Debugf("Query Raw Result: %s", string(body))
 	return body, nil
+}
+
+func (c *Client) GetIndomForMetric(metric *Metric) (*InstanceDomain, error) {
+	query := NewInstanceDomainQuery(metric.Indom)
+	indom, err := c.InstanceDomain(query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return indom, nil
 }
