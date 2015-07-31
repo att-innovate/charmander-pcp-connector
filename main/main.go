@@ -32,7 +32,7 @@ func validate() {
 func main() {
 	logger.Infoln("Starting...")
 
-	context := pcp.NewContext(hostname)
+	context := pcp.NewContext(hostname, "")
 	client := pcp.NewClient(endpoint, context)
 	client.SetLogLevel(pcp.LOG_DEBUG)
 	// var query pcp.Query
@@ -63,9 +63,7 @@ func main() {
 	metric_values_query := pcp.NewMetricValueQuery(names, []string{})
 	resp, err := client.MetricValues(metric_values_query)
 
-	for _, v := range resp.Values {
-		logger.Debugln(pcp.MetricValueType(metrics, v))
-	}
+	logger.Debugln(pcp.MetricValueType(metrics, resp.Values[0]))
 
 	if err != nil {
 		logger.Errorf("Received error retrieving metric values: %s\n", err)
@@ -85,4 +83,9 @@ func main() {
 	}
 
 	logger.Debugln(indoms_result)
+
+	// update the metric values with their metric names
+	for _, value := range resp.Values {
+		value.UpdateInstanceNames(indoms_result)
+	}
 }

@@ -72,7 +72,7 @@ func (c *Client) Metrics(query *MetricQuery) ([]Metric, error) {
 	name := func(m1, m2 *Metric) bool {
 		return m1.Name < m2.Name
 	}
-	By(name).Sort(metrics)
+	MetricBy(name).Sort(metrics)
 
 	return metrics, nil
 }
@@ -104,6 +104,10 @@ func (c *Client) InstanceDomain(query *InstanceDomainQuery) (*InstanceDomain, er
 	if err := json.Unmarshal(body, &indom); err != nil {
 		return nil, err
 	}
+	ids := func(d1, d2 *InstanceDomainInstance) bool {
+		return d1.ID < d2.ID
+	}
+	IDInstanceBy(ids).Sort(indom.Instances)
 	return &indom, nil
 }
 

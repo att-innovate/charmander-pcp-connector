@@ -1,6 +1,9 @@
 package pcp
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+)
 
 /*
 The PM_* types are taken directly from the PCP source:
@@ -41,7 +44,8 @@ type Metric struct {
 }
 
 type MetricInstance struct {
-	ID    int32       `json:"instance"`
+	ID    int32 `json:"instance"`
+	Name  string
 	Value interface{} `json:"value"`
 }
 
@@ -49,6 +53,19 @@ type MetricValue struct {
 	Name      string `json:"name"`
 	Pmid      uint32 `json:"pmid"`
 	Instances []MetricInstance
+}
+
+func (m *MetricValue) UpdateInstanceNames(indom *InstanceDomain) {
+	for idx, inst := range m.Instances {
+		i := sort.Search(len(indom.Instances), func(i int) bool {
+			return indom.Instances[i].ID >= inst.ID
+		})
+		if i != len(indom.Instances) {
+			m.Instances[idx].Name = indom.Instances[i].Name
+		} else {
+			fmt.Printf("Failed to find metric name for %v\n", inst)
+		}
+	}
 }
 
 type InstanceDomainInstance struct {
@@ -79,12 +96,12 @@ Example by metric names:
 name := func(m1, m2 *Metric) bool {
 	return m1.Name < m2.Name
 }
-By(name).Sort(metrics)
+MetricBy(name).Sort(metrics)
 
 */
-type By func(m1, m2 *Metric) bool
+type MetricBy func(m1, m2 *Metric) bool
 
-func (by By) Sort(metrics []Metric) {
+func (by MetricBy) Sort(metrics []Metric) {
 	ms := &metricSorter{
 		metrics: metrics,
 		by:      by,
@@ -107,4 +124,33 @@ func (s *metricSorter) Swap(i, j int) {
 
 func (s *metricSorter) Less(i, j int) bool {
 	return s.by(&s.metrics[i], &s.metrics[j])
+}
+
+/* Sorter methods for Instance Domains
+ */
+type IDInstanceBy func(d1, d2 *InstanceDomainInstance) bool
+
+func (by IDInstanceBy) Sort(instances []InstanceDomainInstance) {
+	ids := &iDInstanceSorter{
+		instances: instances,
+		by:        by,
+	}
+	sort.Sort(ids)
+}
+
+type iDInstanceSorter struct {
+	instances []InstanceDomainInstance
+	by        func(d1, d2 *InstanceDomainInstance) bool
+}
+
+func (s *iDInstanceSorter) Len() int {
+	return len(s.instances)
+}
+
+func (s *iDInstanceSorter) Swap(i, j int) {
+	s.instances[i], s.instances[j] = s.instances[j], s.instances[i]
+}
+
+func (s *iDInstanceSorter) Less(i, j int) bool {
+	return s.by(&s.instances[i], &s.instances[j])
 }

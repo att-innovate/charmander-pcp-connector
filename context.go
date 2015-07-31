@@ -16,9 +16,10 @@ type Context struct {
 	ContextID   uint32 `json:"context"`
 }
 
-func NewContext(hostname string) *Context {
+func NewContext(hostname, hostspec string) *Context {
 	c := &Context{
 		Hostname: hostname,
+		Hostspec: hostspec,
 	}
 
 	return c
