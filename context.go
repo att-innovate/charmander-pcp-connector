@@ -41,7 +41,7 @@ func (c *Context) setIfNotEmpty(v *url.Values, key string, value string) {
 func (c *Context) params() string {
 	v := url.Values{}
 
-	v.Set("hostname", c.Hostname)
+	c.setIfNotEmpty(&v, "hostname", c.Hostname)
 	c.setIfNotEmpty(&v, "hostspec", c.Hostspec)
 	c.setIfNotEmpty(&v, "local", c.Local)
 	c.setIfNotEmpty(&v, "archivefile", c.Archivefile)

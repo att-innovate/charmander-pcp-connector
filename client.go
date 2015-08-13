@@ -8,19 +8,25 @@ import (
 )
 
 type Client struct {
-	Context  *Context
-	Endpoint string
-	logger   *Logger
-	path     string
+	Context *Context
+	Host    string
+	Port    uint16
+	logger  *Logger
+	path    string
 }
 
-func NewClient(endpoint string, context *Context) *Client {
+func NewClient(host string, port uint16, context *Context) *Client {
 	return &Client{
-		Context:  context,
-		Endpoint: endpoint,
-		path:     "/pmapi",
-		logger:   NewLogger(LOG_INFO),
+		Context: context,
+		Host:    host,
+		Port:    port,
+		path:    "/pmapi",
+		logger:  NewLogger(LOG_INFO),
 	}
+}
+
+func (c *Client) Endpoint() string {
+	return fmt.Sprintf("http://%s:%d", c.Host, c.Port)
 }
 
 func (c *Client) SetLogLevel(level int) error {
@@ -37,7 +43,7 @@ func (c *Client) RefreshContext() error {
 
 	url := fmt.Sprintf(
 		"%s%s/%s",
-		c.Endpoint,
+		c.Endpoint(),
 		c.path,
 		query,
 	)
@@ -119,7 +125,7 @@ func (c *Client) getQuery(query Querier) ([]byte, error) {
 
 	url := fmt.Sprintf(
 		"%s%s/%d/%s",
-		c.Endpoint,
+		c.Endpoint(),
 		c.path,
 		c.Context.ContextID,
 		q,
@@ -129,9 +135,9 @@ func (c *Client) getQuery(query Querier) ([]byte, error) {
 }
 
 func (c *Client) get(url string) ([]byte, error) {
+	c.logger.Debugf("Generated url: %s", url)
 	resp, err := http.Get(url)
 
-	c.logger.Debugf("Generated url: %s", url)
 	if err != nil {
 		return nil, err
 	}

@@ -118,3 +118,79 @@ type MetricValueResponse struct {
 	Timestamp *TimeStamp
 	Values    []*MetricValue
 }
+
+type MetricValueResponseList []*MetricValueResponse
+
+func (m MetricValueResponseList) InstanceNames() []string {
+	names := []string{}
+	nameMap := make(map[string]bool)
+
+	for _, response := range m {
+		for _, value := range response.Values {
+			for _, inst := range value.Instances {
+				nameMap[inst.Name] = true
+			}
+		}
+	}
+	for key, _ := range nameMap {
+		names = append(names, key)
+	}
+	return names
+}
+
+func (m MetricValueResponseList) InstanceFilter(
+	match func(instance MetricInstance) bool,
+) map[string][]MetricInstance {
+
+	result := make(map[string][]MetricInstance)
+
+	for _, response := range m {
+		for _, value := range response.Values {
+			for _, inst := range value.Instances {
+				if match(inst) {
+					result[value.MetricName] = append(result[value.MetricName], inst)
+				}
+			}
+
+		}
+	}
+	return result
+}
+
+func (m MetricValueResponseList) MetricNames() []string {
+	result := []string{}
+	mapResult := make(map[string]struct{})
+
+	for _, response := range m {
+		for _, value := range response.Values {
+			mapResult[value.MetricName] = struct{}{}
+		}
+	}
+
+	for name, _ := range mapResult {
+		result = append(result, name)
+	}
+
+	return result
+}
+
+func (m MetricValueResponseList) MetricValueByInstance() map[string]map[string]interface{} {
+	metricsMap := make(map[string]map[string]interface{})
+
+	for _, response := range m {
+		for _, value := range response.Values {
+			for _, inst := range value.Instances {
+				if _, ok := metricsMap[inst.Name]; !ok {
+					metricsMap[inst.Name] = make(map[string]interface{})
+				}
+				metricsMap[inst.Name][value.MetricName] = inst.Value
+
+				// Set the timestamp, only once
+				if _, ok := metricsMap[inst.Name]["time"]; !ok {
+					metricsMap[inst.Name]["time"] = response.Timestamp.Seconds
+				}
+			}
+		}
+	}
+	return metricsMap
+}

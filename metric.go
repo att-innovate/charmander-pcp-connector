@@ -48,7 +48,7 @@ type MetricList []Metric
 func (metrics MetricList) MetricValueType(value *MetricValue) string {
 	t := PM_TYPE_UNKNOWN
 	i := sort.Search(len(metrics), func(i int) bool {
-		return metrics[i].Name >= value.Name
+		return metrics[i].Name >= value.MetricName
 	})
 	if i != len(metrics) {
 		t = metrics[i].Type
@@ -76,9 +76,9 @@ type MetricInstance struct {
 }
 
 type MetricValue struct {
-	Name      string `json:"name"`
-	Pmid      uint32 `json:"pmid"`
-	Instances []MetricInstance
+	MetricName string `json:"name"`
+	Pmid       uint32 `json:"pmid"`
+	Instances  []MetricInstance
 }
 
 func (m *MetricValue) UpdateInstanceNames(indom *InstanceDomain) {
