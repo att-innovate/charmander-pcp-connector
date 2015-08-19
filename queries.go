@@ -67,18 +67,18 @@ func (m *MetricValueQuery) Query() (string, error) {
 }
 
 type InstanceDomainQuery struct {
-	InstanceDomain uint32
+	InstanceDomain int
 	Name           string
 	Instances      []uint32
 	INames         []string
 }
 
-func NewInstanceDomainQuery(id uint32) *InstanceDomainQuery {
+func NewInstanceDomainQuery(id int) *InstanceDomainQuery {
 	return &InstanceDomainQuery{InstanceDomain: id}
 }
 
 func (id *InstanceDomainQuery) Query() (string, error) {
-	if id.InstanceDomain == 0 && id.Name == "" {
+	if id.InstanceDomain <= PM_NO_DOMAIN && id.Name == "" {
 		e := errors.New("You must provide at least one InstanceDomain or Name for the query!")
 		return "", e
 	}
@@ -99,7 +99,7 @@ func (id *InstanceDomainQuery) Query() (string, error) {
 	if instances != "" {
 		u.Set("instance", instances)
 	}
-	if id.InstanceDomain != 0 {
+	if id.InstanceDomain > 0 {
 		u.Set("indom", fmt.Sprintf("%d", id.InstanceDomain))
 	}
 	if id.Name != "" {

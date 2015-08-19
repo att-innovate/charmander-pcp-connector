@@ -79,7 +79,6 @@ func (c *Client) Metrics(query *MetricQuery) (MetricList, error) {
 		return m1.Name < m2.Name
 	}
 	MetricBy(name).Sort(metrics)
-
 	return metrics, nil
 }
 
@@ -130,7 +129,7 @@ func (c *Client) getQuery(query Querier) ([]byte, error) {
 		c.Context.ContextID,
 		q,
 	)
-
+	c.logger.Debugf("Executing Query: %s\n", url)
 	return c.get(url)
 }
 
@@ -153,11 +152,17 @@ func (c *Client) get(url string) ([]byte, error) {
 }
 
 func (c *Client) GetIndomForMetric(metric *Metric) (*InstanceDomain, error) {
-	query := NewInstanceDomainQuery(metric.Indom)
-	indom, err := c.InstanceDomain(query)
+	var indom *InstanceDomain
+	var err error
+	indom = &InstanceDomain{ID: PM_NO_DOMAIN}
 
-	if err != nil {
-		return nil, err
+	if metric.Indom != PM_NO_DOMAIN {
+		query := NewInstanceDomainQuery(metric.Indom)
+		indom, err = c.InstanceDomain(query)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return indom, nil
