@@ -1,6 +1,7 @@
 package pcp
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 )
@@ -30,17 +31,81 @@ const (
 	PM_TYPE_EVENT            = "EVENT"            /* packed pmEventArray */
 	PM_TYPE_HIGHRES_EVENT    = "HIGHRES_EVENT"    /* packed pmHighResEventArray */
 	PM_TYPE_UNKNOWN          = "UNKOWN"           /* used in pmValueBlock, not pmDesc */
+	PM_NO_DOMAIN             = -1                 /* this is the instance domain id used to indicate no domain */
+	PM_NO_INSTANCE           = -1                 /* instance does not exist */
 )
 
 type Metric struct {
-	Name        string `json:"name"`
-	ID          uint32 `json:"pmID"`
-	Indom       uint32 `json:"indom"`
-	Type        string `json:"type"`
-	Sem         string `json:"instant"`
-	Units       string `json:"units"`
-	TextOneline string `json:"text-oneline"`
-	TextHelp    string `json:"text-help"`
+	Name        string
+	ID          uint32
+	Indom       int
+	Type        string
+	Sem         string
+	Units       string
+	TextOneline string
+	TextHelp    string
+}
+
+func (m *Metric) UnmarshalJSON(data []byte) error {
+	result := struct {
+		Name        *string `json:"name"`
+		ID          *uint32 `json:"pmID"`
+		Indom       *int    `json:"indom"`
+		Type        *string `json:"type"`
+		Sem         *string `json:"instant"`
+		Units       *string `json:"units"`
+		TextOneline *string `json:"text-oneline"`
+		TextHelp    *string `json:"text-help"`
+	}{}
+
+	json.Unmarshal(data, &result)
+
+	if result.Name != nil {
+		m.Name = *result.Name
+	} else {
+		m.Name = ""
+	}
+
+	if result.ID != nil {
+		m.ID = *result.ID
+	} else {
+		m.ID = 0
+	}
+
+	if result.Indom != nil {
+		m.Indom = *result.Indom
+	} else {
+		m.Indom = -1
+	}
+
+	if result.Type != nil {
+		m.Type = *result.Type
+	} else {
+		m.Type = ""
+	}
+
+	if result.Sem != nil {
+		m.Sem = *result.Sem
+	} else {
+		m.Sem = ""
+	}
+
+	if result.Units != nil {
+		m.Units = *result.Units
+	} else {
+		m.Units = ""
+	}
+	if result.TextOneline != nil {
+		m.TextOneline = *result.TextOneline
+	} else {
+		m.TextOneline = ""
+	}
+	if result.TextHelp != nil {
+		m.TextHelp = *result.TextHelp
+	} else {
+		m.TextHelp = ""
+	}
+	return nil
 }
 
 type MetricList []Metric
@@ -83,13 +148,17 @@ type MetricValue struct {
 
 func (m *MetricValue) UpdateInstanceNames(indom *InstanceDomain) {
 	for idx, inst := range m.Instances {
-		i := sort.Search(len(indom.Instances), func(i int) bool {
-			return indom.Instances[i].ID >= inst.ID
-		})
-		if i != len(indom.Instances) {
-			m.Instances[idx].Name = indom.Instances[i].Name
+		if inst.ID != PM_NO_INSTANCE {
+			i := sort.Search(len(indom.Instances), func(i int) bool {
+				return indom.Instances[i].ID >= inst.ID
+			})
+			if i != len(indom.Instances) {
+				m.Instances[idx].Name = indom.Instances[i].Name
+			} else {
+				fmt.Printf("Failed to find metric name for %v\n", inst)
+			}
 		} else {
-			fmt.Printf("Failed to find metric name for %v\n", inst)
+			m.Instances[idx].Name = "UNDEFINED"
 		}
 	}
 }
@@ -100,7 +169,7 @@ type InstanceDomainInstance struct {
 }
 
 type InstanceDomain struct {
-	ID        uint32                   `json:"indom"`
+	ID        int                      `json:"indom"`
 	Instances []InstanceDomainInstance `json:"instances"`
 }
 
