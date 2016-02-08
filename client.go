@@ -94,9 +94,9 @@ func (c *Client) MetricValues(query *MetricValueQuery) (*MetricValueResponse, er
 	if err := json.Unmarshal(body, &result); err != nil {
 	    switch e := err.(type) {
 	    case *json.UnmarshalTypeError:
-                c.logger.Debugln("UnmarshalTypeError: Value[%s] Type[%v]\n", e.Value, e.Type)
+                c.logger.Debugf("UnmarshalTypeError: Value[%s] Type[%v]\n", e.Value, e.Type)
 	    case *json.InvalidUnmarshalError:
-		c.logger.Debugln("InvalidUnmarshalError: Type[%v]\n", e.Type)
+		c.logger.Debugf("InvalidUnmarshalError: Type[%v]\n", e.Type)
 	    default:
 	        c.logger.Debugln(err)
 	    }
