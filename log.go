@@ -18,7 +18,7 @@ type Logger struct {
 }
 
 func NewLogger(loglevel int) *Logger {
-	level := LOG_DISABLE
+	level := LOG_DEBUG
 
 	switch {
 	case loglevel == LOG_ERRORS:
