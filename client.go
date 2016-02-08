@@ -107,16 +107,16 @@ func (c *Client) MetricValues(query *MetricValueQuery) (*MetricValueResponse, er
 	    switch e := err.(type) {
 	    case *json.UnmarshalTypeError:
                 c.logger.Debugf("UnmarshalTypeError: Value[%s] Type[%v]\n", e.Value, e.Type)
-                c.logger.Debugf(isJSONString(%s) = %v\n", e.Value, isJSONString(e.Value))
-                c.logger.Debugf(isJSON(%s) = %v\n\n", e.Value, isJSON(e.Value))
+                c.logger.Debugf(isJSONString(%s) = %v\n", isJSONString("%s"))
+                c.logger.Debugf(isJSON(%s) = %v\n\n", isJSON("%s"))
 	    case *json.InvalidUnmarshalError:
 		c.logger.Debugf("InvalidUnmarshalError: Type[%v]\n", e.Type)
-		c.logger.Debugf(isJSONString(%s) = %v\n", e.Value, isJSONString(e.Value))
-                c.logger.Debugf(isJSON(%s) = %v\n\n", e.Value, isJSON(e.Value))
+		c.logger.Debugf(isJSONString(%s) = %v\n", isJSONString("%s"))
+                c.logger.Debugf(isJSON(%s) = %v\n\n", isJSON("%s"))
 	    default:
 	        c.logger.Debugln(err)
-	        c.logger.Debugf(isJSONString(%s) = %v\n", e.Value, isJSONString(e.Value))
-                c.logger.Debugf(isJSON(%s) = %v\n\n", e.Value, isJSON(e.Value))
+	        c.logger.Debugf(isJSONString(%s) = %v\n", isJSONString("%s"))
+                c.logger.Debugf(isJSON(%s) = %v\n\n", isJSON("%s"))
 	    }
 	    return nil, err
 	}
