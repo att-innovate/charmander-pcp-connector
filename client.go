@@ -15,6 +15,18 @@ type Client struct {
 	path    string
 }
 
+func isJSONString(s string) bool {
+    var js string
+    return json.Unmarshal([]byte(s), &js) == nil
+
+}
+
+func isJSON(s string) bool {
+    var js map[string]interface{}
+    return json.Unmarshal([]byte(s), &js) == nil
+
+}
+
 func NewClient(host string, port uint16, context *Context) *Client {
 	return &Client{
 		Context: context,
@@ -95,10 +107,16 @@ func (c *Client) MetricValues(query *MetricValueQuery) (*MetricValueResponse, er
 	    switch e := err.(type) {
 	    case *json.UnmarshalTypeError:
                 c.logger.Debugf("UnmarshalTypeError: Value[%s] Type[%v]\n", e.Value, e.Type)
+                c.logger.Debugf(isJSONString(%s) = %v\n", e.Value, isJSONString(e.Value))
+                c.logger.Debugf(isJSON(%s) = %v\n\n", e.Value, isJSON(e.Value))
 	    case *json.InvalidUnmarshalError:
 		c.logger.Debugf("InvalidUnmarshalError: Type[%v]\n", e.Type)
+		c.logger.Debugf(isJSONString(%s) = %v\n", e.Value, isJSONString(e.Value))
+                c.logger.Debugf(isJSON(%s) = %v\n\n", e.Value, isJSON(e.Value))
 	    default:
 	        c.logger.Debugln(err)
+	        c.logger.Debugf(isJSONString(%s) = %v\n", e.Value, isJSONString(e.Value))
+                c.logger.Debugf(isJSON(%s) = %v\n\n", e.Value, isJSON(e.Value))
 	    }
 	    return nil, err
 	}
