@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/att-innovate/pcp"
+	"github.com/att-innovate/charmander-pcp"
 )
 
 var (
